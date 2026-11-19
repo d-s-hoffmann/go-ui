@@ -1,50 +1,44 @@
 //go:build js && wasm
 
+// Command gallery shows animated scenes on a canvas in the browser.
 package main
 
 import (
-	"math"
+	"image"
+	"syscall/js"
 	"time"
 
-	"syscall/js"
+	"github.com/d-s-hoffmann/go-ui/apps/gallery/scene"
 )
 
 const (
-	width   = 320
-	height  = 200
-	maxIter = 60
+	width  = 320
+	height = 200
 )
-
-var mode = "plasma"
 
 func main() {
 	doc := js.Global().Get("document")
 	canvas := doc.Call("getElementById", "stage")
-	if canvas.IsUndefined() {
+	if canvas.IsNull() {
 		println("no #stage canvas found")
 		return
 	}
 	ctx := canvas.Call("getContext", "2d")
 
+	frame := image.NewRGBA(image.Rect(0, 0, width, height))
 	img := ctx.Call("createImageData", width, height)
-	pixels := make([]byte, width*height*4)
-	buf := js.Global().Get("Uint8Array").New(len(pixels))
-	pal := makePalette(256)
+	buf := js.Global().Get("Uint8Array").New(len(frame.Pix))
 
-	type scene struct{ key, label string }
-	scenes := []scene{
-		{"plasma", "Plasma"},
-		{"julia", "Julia set"},
-		{"lissajous", "Lissajous"},
-	}
+	scenes := []scene.Scene{scene.Plasma{}, scene.Julia{}, &scene.Lissajous{}}
+	current := scenes[0]
+
 	bar := doc.Call("getElementById", "controls")
-	for _, sc := range scenes {
-		key := sc.key
+	for _, s := range scenes {
 		btn := doc.Call("createElement", "button")
-		btn.Set("textContent", sc.label)
+		btn.Set("textContent", s.Name())
 		btn.Set("className", "btn")
 		onClick := js.FuncOf(func(this js.Value, _ []js.Value) any {
-			mode = key
+			current = s
 			return nil
 		})
 		btn.Call("addEventListener", "click", onClick)
@@ -52,141 +46,22 @@ func main() {
 	}
 
 	start := time.Now()
-	var frame js.Func
-	frame = js.FuncOf(func(this js.Value, _ []js.Value) any {
-		t := time.Since(start).Seconds()
-		switch mode {
-		case "julia":
-			drawJulia(pixels, pal, t)
-			blit(ctx, img, buf, pixels)
-		case "lissajous":
-			drawLissajous(ctx, t)
-		default:
-			drawPlasma(pixels, pal, t)
-			blit(ctx, img, buf, pixels)
-		}
-		js.Global().Call("requestAnimationFrame", frame)
+	var tick js.Func
+	tick = js.FuncOf(func(this js.Value, _ []js.Value) any {
+		current.Render(frame, time.Since(start))
+		blit(ctx, img, buf, frame)
+		js.Global().Call("requestAnimationFrame", tick)
 		return nil
 	})
-	js.Global().Call("requestAnimationFrame", frame)
+	js.Global().Call("requestAnimationFrame", tick)
 
 	select {} // sleep forever; the browser drives everything via callbacks
 }
 
-func blit(ctx, img, buf js.Value, px []byte) {
-	js.CopyBytesToJS(buf, px)
+// blit copies frame onto the canvas through the reusable ImageData img
+// and its staging buffer buf.
+func blit(ctx, img, buf js.Value, frame *image.RGBA) {
+	js.CopyBytesToJS(buf, frame.Pix)
 	img.Get("data").Call("set", buf)
 	ctx.Call("putImageData", img, 0, 0)
-}
-
-func drawPlasma(px []byte, pal [][3]uint8, t float64) {
-	i := 0
-	for y := range height {
-		fy := float64(y)
-		for x := range width {
-			fx := float64(x)
-			v := math.Sin(fx/18+t) +
-				math.Sin(fy/9-t*1.4) +
-				math.Sin((fx+fy)/26+t*0.8) +
-				math.Sin(math.Hypot(fx-width/2, fy-height/2)/14-t)
-			idx := max(int((v+4)*32), 0)
-			if idx > 255 {
-				idx = 255
-			}
-			c := pal[idx]
-			px[i], px[i+1], px[i+2] = c[0], c[1], c[2]
-			px[i+3] = 255
-			i += 4
-		}
-	}
-}
-
-func drawJulia(px []byte, pal [][3]uint8, t float64) {
-	angle := t * 0.15
-	cr := math.Cos(angle) * 0.7885
-	ci := math.Sin(angle) * 0.7885
-
-	i := 0
-	for y := range height {
-		zy0 := (float64(y) - height/2) / (height / 2.6)
-		for x := range width {
-			zx := (float64(x) - width/2) / (width / 3.2)
-			zy := zy0
-			n := 0
-			var zx2, zy2 float64
-			for ; n < maxIter; n++ {
-				zx2, zy2 = zx*zx, zy*zy
-				if zx2+zy2 > 4 {
-					break
-				}
-				zy = 2*zx*zy + ci
-				zx = zx2 - zy2 + cr
-			}
-
-			var c [3]uint8
-			if n >= maxIter {
-				c = [3]uint8{12, 9, 36}
-			} else {
-				mu := float64(n) + 1 - math.Log2(math.Log(math.Sqrt(zx2+zy2)))
-				if mu < 0 {
-					mu = 0
-				}
-				k := int(mu*16) % 256
-				if k < 0 {
-					k += 256
-				}
-				c = pal[k]
-			}
-			px[i], px[i+1], px[i+2] = c[0], c[1], c[2]
-			px[i+3] = 255
-			i += 4
-		}
-	}
-}
-
-func drawLissajous(ctx js.Value, t float64) {
-	ctx.Set("fillStyle", "#0b0920")
-	ctx.Call("fillRect", 0, 0, width, height)
-	ctx.Set("strokeStyle", "#8f6bff")
-	ctx.Set("lineWidth", 1.5)
-	ctx.Call("beginPath")
-
-	const steps = 1400
-	for i := 0; i <= steps; i++ {
-		u := 2 * math.Pi * float64(i) / steps
-		x := width/2 + (width/2-6)*math.Sin(3*u+t*0.9)
-		y := height/2 + (height/2-6)*math.Sin(4*u)
-		if i == 0 {
-			ctx.Call("moveTo", x, y)
-		} else {
-			ctx.Call("lineTo", x, y)
-		}
-	}
-	ctx.Call("stroke")
-}
-
-// makePalette builds a bright HSV rainbow with n entries.
-func makePalette(n int) [][3]uint8 {
-	pal := make([][3]uint8, n)
-	for i := range n {
-		h := float64(i) / float64(n) * 6
-		x := uint8(255 * (1 - math.Abs(math.Mod(h, 2)-1)))
-		var r, g, b uint8
-		switch int(h) % 6 {
-		case 0:
-			r, g, b = 255, x, 0
-		case 1:
-			r, g, b = x, 255, 0
-		case 2:
-			r, g, b = 0, 255, x
-		case 3:
-			r, g, b = 0, x, 255
-		case 4:
-			r, g, b = x, 0, 255
-		default:
-			r, g, b = 255, 0, x
-		}
-		pal[i] = [3]uint8{r, g, b}
-	}
-	return pal
 }
