@@ -10,7 +10,7 @@ WASM_JS   := $(BUILD)/wasm_exec.js
 ASSETS    := $(patsubst $(STATIC)/%,$(BUILD)/%,$(wildcard $(STATIC)/*))
 GO_SRC    := $(shell find . -name '*.go' -not -path './$(BUILD)/*') go.mod
 
-.PHONY: run build clean help
+.PHONY: run build vet clean help
 
 ## Build everything, then serve.
 run: build
@@ -34,6 +34,11 @@ $(WASM_JS): $(WASM_EXEC)
 $(BUILD)/%: $(STATIC)/%
 >@mkdir -p $(BUILD)
 >cp "$<" $@
+
+## Vet all packages. A native run skips js-only code, so vet that too.
+vet:
+>$(GO) vet ./...
+>GOOS=js GOARCH=wasm $(GO) vet ./...
 
 ## Remove all generated output.
 clean:
