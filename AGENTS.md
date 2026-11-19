@@ -1,29 +1,31 @@
 # AGENTS.md
 
-## Goal
-A self-written graphical app in Go, compiled to WASM, that runs well in
-desktop and mobile browsers. Deployment comes later; structure matters now.
+## Project
+A self-written graphical app in Go, compiled to WASM, for desktop and
+mobile browsers. Good structure is the top priority.
 
-## How to work
-- Small, incremental PRs: at most 500 changed lines, ideally fewer.
+## Working rules
+- Keep PRs small and incremental: at most 500 changed lines, ideally fewer.
   Generated files and toolchain bumps don't count toward the limit.
 - One concern per commit; renames and formatting go in their own commits.
 - Reviews are strict: plan before coding and explain choices in the PR.
 - Follow Go conventions (https://go.dev/doc/modules/layout). Code must pass
-  gofmt and go vet, on the latest Go (see go.mod).
+  gofmt and go vet, on the Go version in go.mod.
 
 ## Layout
-- `apps/<name>/`: one deployable program each (`gallery` = WASM client,
-  `server` = dev server). Keep them thin.
-- `internal/`: shared packages. Rendering must not import `syscall/js`.
+- `apps/<name>/`: one deployable program each. Keep them thin.
+- `internal/`: shared packages. Rendering code must not import `syscall/js`.
 - `static/`: hand-written web files. `build/`: generated, never committed.
 
-## Direction
+## UI
 - The menu is separate from the view and collapses to a small button.
-- The view fills the whole screen. Scenes (plasma, julia, lissajous) scale
-  to any size and are interchangeable.
-- Testing (later PRs): test the whole WASM binary against inputs and
-  outputs. Keep rendering deterministic so frames are reproducible.
+- The view fills the whole screen.
+- Scenes scale to any size and are interchangeable.
+
+## Testing
+- Prefer tests that run the whole WASM binary and check its outputs for
+  given inputs.
+- Keep rendering deterministic so frames are reproducible.
 
 ## Commands
     make build   # -> build/
