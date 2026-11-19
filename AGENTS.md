@@ -13,8 +13,10 @@ mobile browsers. Good structure is the top priority.
   gofmt and go vet, on the Go version in go.mod.
 
 ## Layout
-- `apps/<name>/`: one deployable program each. Keep them thin.
-- `internal/`: shared packages. Rendering code must not import `syscall/js`.
+- `apps/<name>/`: one deployable program each. Keep `main` thin; packages
+  only that app uses go in subfolders (e.g. `apps/gallery/scene/`).
+- `internal/`: generic packages any app can reuse (e.g. browser glue).
+- Rendering code must not import `syscall/js`.
 - `static/`: hand-written web files. `build/`: generated, never committed.
 
 ## UI
