@@ -43,7 +43,7 @@ func main() {
 		btn := doc.Call("createElement", "button")
 		btn.Set("textContent", sc.label)
 		btn.Set("className", "btn")
-		onClick := js.FuncOf(func(this js.Value, _ []js.Value) interface{} {
+		onClick := js.FuncOf(func(this js.Value, _ []js.Value) any {
 			mode = key
 			return nil
 		})
@@ -53,7 +53,7 @@ func main() {
 
 	start := time.Now()
 	var frame js.Func
-	frame = js.FuncOf(func(this js.Value, _ []js.Value) interface{} {
+	frame = js.FuncOf(func(this js.Value, _ []js.Value) any {
 		t := time.Since(start).Seconds()
 		switch mode {
 		case "julia":
@@ -81,18 +81,15 @@ func blit(ctx, img, buf js.Value, px []byte) {
 
 func drawPlasma(px []byte, pal [][3]uint8, t float64) {
 	i := 0
-	for y := 0; y < height; y++ {
+	for y := range height {
 		fy := float64(y)
-		for x := 0; x < width; x++ {
+		for x := range width {
 			fx := float64(x)
 			v := math.Sin(fx/18+t) +
 				math.Sin(fy/9-t*1.4) +
 				math.Sin((fx+fy)/26+t*0.8) +
 				math.Sin(math.Hypot(fx-width/2, fy-height/2)/14-t)
-			idx := int((v + 4) * 32)
-			if idx < 0 {
-				idx = 0
-			}
+			idx := max(int((v+4)*32), 0)
 			if idx > 255 {
 				idx = 255
 			}
@@ -110,9 +107,9 @@ func drawJulia(px []byte, pal [][3]uint8, t float64) {
 	ci := math.Sin(angle) * 0.7885
 
 	i := 0
-	for y := 0; y < height; y++ {
+	for y := range height {
 		zy0 := (float64(y) - height/2) / (height / 2.6)
-		for x := 0; x < width; x++ {
+		for x := range width {
 			zx := (float64(x) - width/2) / (width / 3.2)
 			zy := zy0
 			n := 0
@@ -171,7 +168,7 @@ func drawLissajous(ctx js.Value, t float64) {
 // makePalette builds a bright HSV rainbow with n entries.
 func makePalette(n int) [][3]uint8 {
 	pal := make([][3]uint8, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		h := float64(i) / float64(n) * 6
 		x := uint8(255 * (1 - math.Abs(math.Mod(h, 2)-1)))
 		var r, g, b uint8
