@@ -12,12 +12,12 @@ WASM_JS   := $(PUBLIC)/wasm_exec.js
 
 ## Build everything, then serve.
 run: build
->$(GO) run ./server -addr $(ADDR)
+>$(GO) run ./apps/server -addr $(ADDR)
 
 ## Compile the WASM client.
-$(APP_WASM): $(wildcard client/*.go) go.mod
+$(APP_WASM): $(wildcard cmd/gallery/*.go) go.mod
 >mkdir -p $(PUBLIC)
->GOOS=js GOARCH=wasm $(GO) build -o $(APP_WASM) ./client
+>GOOS=js GOARCH=wasm $(GO) build -o $(APP_WASM) ./apps/gallery
 
 ## Ship the toolchain JS glue (copied only if missing).
 $(WASM_JS):
