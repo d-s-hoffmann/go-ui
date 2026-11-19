@@ -1,35 +1,43 @@
 .RECIPEPREFIX := >
 GO        ?= go
-GOROOT    := $(shell $(GO) env GOROOT)
 ADDR      ?= :8080
-WASM_EXEC := $(GOROOT)/lib/wasm/wasm_exec.js
+WASM_EXEC := $(shell $(GO) env GOROOT)/lib/wasm/wasm_exec.js
 
-PUBLIC    := public
-APP_WASM  := $(PUBLIC)/app.wasm
-WASM_JS   := $(PUBLIC)/wasm_exec.js
+STATIC    := static
+BUILD     := build
+APP_WASM  := $(BUILD)/app.wasm
+WASM_JS   := $(BUILD)/wasm_exec.js
+ASSETS    := $(patsubst $(STATIC)/%,$(BUILD)/%,$(wildcard $(STATIC)/*))
+GO_SRC    := $(shell find . -name '*.go' -not -path './$(BUILD)/*') go.mod
 
 .PHONY: run build clean help
 
 ## Build everything, then serve.
 run: build
->$(GO) run ./server -addr $(ADDR)
-
-## Compile the WASM client.
-$(APP_WASM): $(wildcard client/*.go) go.mod
->mkdir -p $(PUBLIC)
->GOOS=js GOARCH=wasm $(GO) build -o $(APP_WASM) ./client
-
-## Ship the toolchain JS glue (copied only if missing).
-$(WASM_JS):
->cp "$(WASM_EXEC)" $(WASM_JS)
+>$(GO) run ./apps/server -addr $(ADDR) -dir $(BUILD)
 
 ## Build outputs only.
-build: $(APP_WASM) $(WASM_JS)
->@echo build complete: $(APP_WASM)
+build: $(APP_WASM) $(WASM_JS) $(ASSETS)
+>@echo build complete: $(BUILD)/
 
-## Remove generated artifacts (keeps index.html).
+## Compile the WASM client.
+$(APP_WASM): $(GO_SRC)
+>@mkdir -p $(BUILD)
+>GOOS=js GOARCH=wasm $(GO) build -o $@ ./apps/gallery
+
+## Copy the JS glue from the active toolchain; it must match the Go version.
+$(WASM_JS): $(WASM_EXEC)
+>@mkdir -p $(BUILD)
+>cp "$<" $@
+
+## Copy hand-written static files.
+$(BUILD)/%: $(STATIC)/%
+>@mkdir -p $(BUILD)
+>cp "$<" $@
+
+## Remove all generated output.
 clean:
->rm -f $(APP_WASM) $(WASM_JS)
+>rm -rf $(BUILD)
 
 help:
 >@grep -E "^## " $(MAKEFILE_LIST) | sed "s/^## //"

@@ -5,8 +5,15 @@ toolchain-generated wasm_exec.js and the 8-line loader in index.html.
 
 ## Quick start
 
-    make run          # builds wasm if stale, serves on :8080
+    make run          # builds into build/ if stale, serves on :8080
     make run ADDR=:9090
-    make clean
+    make clean        # removes build/
 
 Three animated 2D scenes: Plasma, Julia set, Lissajous.
+
+## Layout
+
+    apps/gallery/   WASM client (GOOS=js GOARCH=wasm)
+    apps/server/    development file server
+    static/         hand-written files copied into build/ (index.html)
+    build/          generated output, not committed

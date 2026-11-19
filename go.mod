@@ -1,3 +1,3 @@
-module gallery
+module github.com/d-s-hoffmann/go-ui
 
-go 1.22
+go 1.27
