@@ -1,67 +1,41 @@
 //go:build js && wasm
 
 // Command gallery shows animated scenes on a canvas in the browser.
+//
+// It only wires packages together: scenes come from ./scene, and
+// everything that talks to the browser lives in internal/web.
 package main
 
 import (
-	"image"
-	"syscall/js"
 	"time"
 
 	"github.com/d-s-hoffmann/go-ui/apps/gallery/scene"
-)
-
-const (
-	width  = 320
-	height = 200
+	"github.com/d-s-hoffmann/go-ui/internal/web"
 )
 
 func main() {
-	doc := js.Global().Get("document")
-	canvas := doc.Call("getElementById", "stage")
-	if canvas.IsNull() {
-		println("no #stage canvas found")
+	canvas, err := web.NewCanvas("stage")
+	if err != nil {
+		println(err.Error())
 		return
 	}
-	ctx := canvas.Call("getContext", "2d")
-
-	frame := image.NewRGBA(image.Rect(0, 0, width, height))
-	img := ctx.Call("createImageData", width, height)
-	buf := js.Global().Get("Uint8Array").New(len(frame.Pix))
 
 	scenes := []scene.Scene{scene.Plasma{}, scene.Julia{}, &scene.Lissajous{}}
 	current := scenes[0]
 
-	bar := doc.Call("getElementById", "controls")
-	for _, s := range scenes {
-		btn := doc.Call("createElement", "button")
-		btn.Set("textContent", s.Name())
-		btn.Set("className", "btn")
-		onClick := js.FuncOf(func(this js.Value, _ []js.Value) any {
-			current = s
-			return nil
-		})
-		btn.Call("addEventListener", "click", onClick)
-		bar.Call("appendChild", btn)
+	names := make([]string, len(scenes))
+	for i, s := range scenes {
+		names[i] = s.Name()
+	}
+	if err := web.Buttons("controls", names, func(i int) { current = scenes[i] }); err != nil {
+		println(err.Error())
+		return
 	}
 
-	start := time.Now()
-	var tick js.Func
-	tick = js.FuncOf(func(this js.Value, _ []js.Value) any {
-		current.Render(frame, time.Since(start))
-		blit(ctx, img, buf, frame)
-		js.Global().Call("requestAnimationFrame", tick)
-		return nil
+	web.Animate(func(t time.Duration) {
+		current.Render(canvas.Frame(), t)
+		canvas.Present()
 	})
-	js.Global().Call("requestAnimationFrame", tick)
 
-	select {} // sleep forever; the browser drives everything via callbacks
-}
-
-// blit copies frame onto the canvas through the reusable ImageData img
-// and its staging buffer buf.
-func blit(ctx, img, buf js.Value, frame *image.RGBA) {
-	js.CopyBytesToJS(buf, frame.Pix)
-	img.Get("data").Call("set", buf)
-	ctx.Call("putImageData", img, 0, 0)
+	select {} // keep the program alive; the browser drives it via callbacks
 }
