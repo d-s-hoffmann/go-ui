@@ -16,7 +16,7 @@ import (
 type Canvas struct {
 	ctx   js.Value // CanvasRenderingContext2D
 	img   js.Value // ImageData reused for every frame
-	buf   js.Value // Uint8Array staging buffer for img
+	data  js.Value // img.data, the Uint8ClampedArray holding its pixels
 	frame *image.RGBA
 }
 
@@ -29,12 +29,12 @@ func NewCanvas(id string) (*Canvas, error) {
 	}
 	w, h := el.Get("width").Int(), el.Get("height").Int()
 	ctx := el.Call("getContext", "2d")
-	frame := image.NewRGBA(image.Rect(0, 0, w, h))
+	img := ctx.Call("createImageData", w, h)
 	return &Canvas{
 		ctx:   ctx,
-		img:   ctx.Call("createImageData", w, h),
-		buf:   js.Global().Get("Uint8Array").New(len(frame.Pix)),
-		frame: frame,
+		img:   img,
+		data:  img.Get("data"),
+		frame: image.NewRGBA(image.Rect(0, 0, w, h)),
 	}, nil
 }
 
@@ -43,7 +43,6 @@ func (c *Canvas) Frame() *image.RGBA { return c.frame }
 
 // Present copies the frame onto the canvas.
 func (c *Canvas) Present() {
-	js.CopyBytesToJS(c.buf, c.frame.Pix)
-	c.img.Get("data").Call("set", c.buf)
+	js.CopyBytesToJS(c.data, c.frame.Pix)
 	c.ctx.Call("putImageData", c.img, 0, 0)
 }
