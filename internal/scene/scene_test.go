@@ -15,7 +15,7 @@ import (
 // scenes returns a fresh instance of every scene. New scenes must be added
 // here to be covered by the contract tests.
 func scenes() []scene.Scene {
-	return []scene.Scene{scene.Plasma{}, scene.Julia{}}
+	return []scene.Scene{scene.Plasma{}, scene.Julia{}, &scene.Lissajous{}}
 }
 
 var sizes = []image.Point{{320, 200}, {390, 844}, {7, 3}, {1, 1}, {5, 0}, {0, 0}}
@@ -99,6 +99,28 @@ func TestRenderAnimates(t *testing.T) {
 				t.Error("frames at 0s and 1s are identical")
 			}
 		})
+	}
+}
+
+func TestLissajousDrawsStrokeOnBackground(t *testing.T) {
+	img := render(&scene.Lissajous{}, image.Pt(320, 200), 0)
+	background := color.RGBA{0x0b, 0x09, 0x20, 0xff}
+	stroke := color.RGBA{0x8f, 0x6b, 0xff, 0xff}
+
+	// The curve keeps a margin from the edges, so corners are background.
+	if c := img.RGBAAt(0, 0); c != background {
+		t.Errorf("corner = %v, want background %v", c, background)
+	}
+	var full int
+	for y := range 200 {
+		for x := range 320 {
+			if img.RGBAAt(x, y) == stroke {
+				full++
+			}
+		}
+	}
+	if full == 0 {
+		t.Error("no pixel is fully covered by the stroke")
 	}
 }
 
