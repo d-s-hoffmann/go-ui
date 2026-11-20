@@ -9,6 +9,9 @@ mobile browsers. Good structure is the top priority.
   Generated files and toolchain bumps don't count toward the limit.
 - One concern per commit; renames and formatting go in their own commits.
 - Reviews are strict: plan before coding and explain choices in the PR.
+- Never rewrite history or force-push unless explicitly asked. Apply review
+  changes and corrections as new commits on top of the branch.
+- Propose name options before naming directories, packages or branches.
 - Follow Go conventions (https://go.dev/doc/modules/layout). Code must pass
   gofmt and go vet, on the Go version in go.mod.
 
