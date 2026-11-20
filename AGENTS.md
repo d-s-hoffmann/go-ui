@@ -7,7 +7,8 @@ mobile browsers. Good structure is the top priority.
 ## Working rules
 - Keep PRs small and incremental: at most 500 changed lines, ideally fewer.
   Generated files and toolchain bumps don't count toward the limit.
-- One concern per commit; renames and formatting go in their own commits.
+- One PR can cover a relatively small set of related concerns. Renames and
+  formatting still go in their own commits.
 - Reviews are strict: plan before coding and explain choices in the PR.
 - Never rewrite history or force-push unless explicitly asked. Apply review
   changes and corrections as new commits on top of the branch.
