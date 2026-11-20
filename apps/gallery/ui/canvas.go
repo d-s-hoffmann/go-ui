@@ -1,9 +1,9 @@
 //go:build js && wasm
 
-// Package web connects Go code to the browser: it presents frames on a
+// Package ui connects Go code to the browser: it presents frames on a
 // canvas, drives the animation loop and builds controls. It knows nothing
 // about what is drawn.
-package web
+package ui
 
 import (
 	"errors"
@@ -25,7 +25,7 @@ type Canvas struct {
 func NewCanvas(id string) (*Canvas, error) {
 	el := js.Global().Get("document").Call("getElementById", id)
 	if el.IsNull() || el.Get("getContext").IsUndefined() {
-		return nil, errors.New("web: no canvas with id " + strconv.Quote(id))
+		return nil, errors.New("ui: no canvas with id " + strconv.Quote(id))
 	}
 	w, h := el.Get("width").Int(), el.Get("height").Int()
 	ctx := el.Call("getContext", "2d")

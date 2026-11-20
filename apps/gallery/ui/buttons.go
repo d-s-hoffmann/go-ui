@@ -1,6 +1,6 @@
 //go:build js && wasm
 
-package web
+package ui
 
 import (
 	"errors"
@@ -14,7 +14,7 @@ func Buttons(id string, labels []string, onSelect func(i int)) error {
 	doc := js.Global().Get("document")
 	bar := doc.Call("getElementById", id)
 	if bar.IsNull() {
-		return errors.New("web: no element with id " + strconv.Quote(id))
+		return errors.New("ui: no element with id " + strconv.Quote(id))
 	}
 	for i, label := range labels {
 		btn := doc.Call("createElement", "button")

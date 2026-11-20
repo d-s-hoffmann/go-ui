@@ -15,7 +15,7 @@ Three animated 2D scenes: Plasma, Julia set, Lissajous.
 
     apps/gallery/         WASM client (GOOS=js GOARCH=wasm)
     apps/gallery/scene/   scenes, rendered into image.RGBA; no browser APIs
+    apps/gallery/ui/      browser glue: canvas, animation loop, controls
     apps/server/          development file server
-    internal/web/         browser glue: canvas, animation loop, controls
     static/               hand-written files copied into build/ (index.html)
     build/                generated output, not committed

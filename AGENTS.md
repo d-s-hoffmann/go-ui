@@ -15,7 +15,6 @@ mobile browsers. Good structure is the top priority.
 ## Layout
 - `apps/<name>/`: one deployable program each. Keep `main` thin; packages
   only that app uses go in subfolders (e.g. `apps/gallery/scene/`).
-- `internal/`: generic packages any app can reuse (e.g. browser glue).
 - Rendering code must not import `syscall/js`.
 - `static/`: hand-written web files. `build/`: generated, never committed.
 
