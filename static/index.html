@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Go × WebAssembly Gallery</title>
+<title>WebAssembly Gallery</title>
 <style>
   :root { color-scheme: dark; }
   body {
@@ -43,16 +43,11 @@
 </head>
 <body>
 <main>
-  <h1>Go × WebAssembly Gallery</h1>
-  <p class="sub">Server, renderer and UI written entirely in Go — no application JavaScript.</p>
+  <h1>WebAssembly Gallery</h1>
+  <p class="sub">Renderer and UI compiled to WebAssembly — no application JavaScript.</p>
   <div id="controls"></div>
   <canvas id="stage" width="320" height="200"></canvas>
 </main>
-<script src="wasm_exec.js"></script>
-<script>
-  const go = new Go();
-  WebAssembly.instantiateStreaming(fetch("app.wasm"), go.importObject)
-    .then(r => go.run(r.instance));
-</script>
+<script type="module" src="load.js"></script>
 </body>
 </html>
