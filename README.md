@@ -15,19 +15,28 @@ only JavaScript is toolchain-generated glue plus a few-line loader.
 
 ## Setting up the environment
 
-1. Install [Go](https://go.dev/dl/) (version in `go.mod`).
-2. Install Rust and the wasm-bindgen CLI (Debian/Ubuntu):
+Debian/Ubuntu:
 
-   ```sh
-   sudo apt install gcc
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-   . "$HOME/.cargo/env"
-   cargo install wasm-bindgen-cli --version 0.2.130 --locked
-   ```
+```sh
+sudo apt install gcc golang rustup
+echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.profile && . ~/.profile
+rustup default stable
+cargo install wasm-bindgen-cli --version 0.2.130 --locked
+```
 
-The exact Rust version and the wasm target are pinned in
-`apps/gallery-rs/rust-toolchain.toml` and install themselves on the first
-build. The wasm-bindgen CLI version must match `apps/gallery-rs/Cargo.toml`.
+macOS (Homebrew):
+
+```sh
+brew install go rustup
+echo 'export PATH="$(brew --prefix rustup)/bin:$HOME/.cargo/bin:$PATH"' >> ~/.zprofile && . ~/.zprofile
+rustup default stable
+cargo install wasm-bindgen-cli --version 0.2.130 --locked
+```
+
+Go downloads the exact version from `go.mod` by itself if the installed one
+is older. Likewise, rustup installs the Rust version and wasm target pinned in
+`apps/gallery-rs/rust-toolchain.toml` on the first build. The wasm-bindgen
+CLI version must match `apps/gallery-rs/Cargo.toml`.
 
 ## Layout
 
