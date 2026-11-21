@@ -13,34 +13,21 @@ only JavaScript is toolchain-generated glue plus a few-line loader.
     make vet                  # go vet, cargo fmt --check, cargo clippy
     make clean                # removes build/ and Cargo's target/
 
-## Installing the toolchains
+## Setting up the environment
 
-Go: install the version named in `go.mod` from https://go.dev/dl/.
+1. Install [Go](https://go.dev/dl/) (version in `go.mod`).
+2. Install Rust and the wasm-bindgen CLI (Debian/Ubuntu):
 
-Rust (only needed for `GALLERY=rust`):
+   ```sh
+   sudo apt install gcc
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+   . "$HOME/.cargo/env"
+   cargo install wasm-bindgen-cli --version 0.2.130 --locked
+   ```
 
-1. A C linker. Rust's build scripts and macros run natively and need one.
-   On Debian/Ubuntu:
-
-       sudo apt install gcc
-
-2. rustup, the Rust toolchain installer:
-
-       curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-   Restart the shell (or `. ~/.cargo/env`) afterwards. The exact Rust
-   version, the wasm32 target, rustfmt and clippy are pinned in
-   `apps/gallery-rs/rust-toolchain.toml`; rustup installs them on the
-   first build.
-
-3. The wasm-bindgen CLI. Its version must equal the `wasm-bindgen` version
-   in `apps/gallery-rs/Cargo.toml` (currently 0.2.130):
-
-       cargo install wasm-bindgen-cli --version 0.2.130 --locked
-
-   or download a prebuilt binary from
-   https://github.com/wasm-bindgen/wasm-bindgen/releases and put
-   `wasm-bindgen` on your `PATH`.
+The exact Rust version and the wasm target are pinned in
+`apps/gallery-rs/rust-toolchain.toml` and install themselves on the first
+build. The wasm-bindgen CLI version must match `apps/gallery-rs/Cargo.toml`.
 
 ## Layout
 
