@@ -48,11 +48,6 @@
   <div id="controls"></div>
   <canvas id="stage" width="320" height="200"></canvas>
 </main>
-<script src="wasm_exec.js"></script>
-<script>
-  const go = new Go();
-  WebAssembly.instantiateStreaming(fetch("app.wasm"), go.importObject)
-    .then(r => go.run(r.instance));
-</script>
+<script type="module" src="load.js"></script>
 </body>
 </html>
