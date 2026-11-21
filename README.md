@@ -15,27 +15,37 @@ only JavaScript is toolchain-generated glue plus a few-line loader.
 
 ## Setting up the environment
 
-Debian/Ubuntu:
+1. Install Go, Rust's installer `rustup`, and a C linker (Rust needs one):
 
-```sh
-sudo apt install gcc golang rustup
-echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.profile && . ~/.profile
-rustup default stable
-cargo install wasm-bindgen-cli --version 0.2.130 --locked
-```
+   ```sh
+   sudo apt install gcc golang rustup    # Debian/Ubuntu
+   brew install gcc go rustup            # Homebrew, e.g. on Bazzite
+   ```
 
-Homebrew (Linux, e.g. Bazzite; on macOS use `~/.zshrc` instead of
-`~/.bashrc`):
+2. Add the tools to your `PATH`. Cargo's folder holds `wasm-bindgen`.
+   Homebrew also needs rustup's folder, because it doesn't link rustup
+   itself (`brew info rustup`). Run the line for your setup:
 
-```sh
-brew install gcc go rustup
-echo 'export PATH="$(brew --prefix rustup)/bin:$HOME/.cargo/bin:$PATH"' >> ~/.bashrc && . ~/.bashrc
-rustup default stable
-cargo install wasm-bindgen-cli --version 0.2.130 --locked
-```
+   ```sh
+   # apt + bash
+   echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc && . ~/.bashrc
+   # Homebrew + bash
+   echo 'export PATH="$(brew --prefix rustup)/bin:$HOME/.cargo/bin:$PATH"' >> ~/.bashrc && . ~/.bashrc
+   ```
 
-Homebrew doesn't put rustup on the `PATH` itself (`brew info rustup`), so
-the second line adds it, together with Cargo's folder for `wasm-bindgen`.
+   ```fish
+   # apt + fish
+   fish_add_path ~/.cargo/bin
+   # Homebrew + fish
+   fish_add_path (brew --prefix rustup)/bin ~/.cargo/bin
+   ```
+
+3. Set up Rust and install the wasm-bindgen CLI (same in every shell):
+
+   ```sh
+   rustup default stable
+   cargo install wasm-bindgen-cli --version 0.2.130 --locked
+   ```
 
 Go downloads the exact version from `go.mod` by itself if the installed one
 is older. Likewise, rustup installs the Rust version and wasm target pinned in
