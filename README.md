@@ -24,14 +24,18 @@ rustup default stable
 cargo install wasm-bindgen-cli --version 0.2.130 --locked
 ```
 
-macOS (Homebrew):
+Homebrew (Linux, e.g. Bazzite; on macOS use `~/.zshrc` instead of
+`~/.bashrc`):
 
 ```sh
-brew install go rustup
-echo 'export PATH="$(brew --prefix rustup)/bin:$HOME/.cargo/bin:$PATH"' >> ~/.zprofile && . ~/.zprofile
+brew install gcc go rustup
+echo 'export PATH="$(brew --prefix rustup)/bin:$HOME/.cargo/bin:$PATH"' >> ~/.bashrc && . ~/.bashrc
 rustup default stable
 cargo install wasm-bindgen-cli --version 0.2.130 --locked
 ```
+
+Homebrew doesn't put rustup on the `PATH` itself (`brew info rustup`), so
+the second line adds it, together with Cargo's folder for `wasm-bindgen`.
 
 Go downloads the exact version from `go.mod` by itself if the installed one
 is older. Likewise, rustup installs the Rust version and wasm target pinned in
